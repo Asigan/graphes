@@ -237,11 +237,6 @@ def DMST(graphe, degre):
     cout = float("inf")
     cmpt = 0
 
-    #init des fourmis
-    fourmis = []
-    for i in range(len(graphe)):
-        fourmis.append([i])
-
     #init des pheromones
     pheromones = {}
     aretes = extraireAretes(graphe)
@@ -257,6 +252,16 @@ def DMST(graphe, degre):
     temps = [0]*4
     #boucle principale
     for i in range(100):
+        tInitD = time.time()
+        fourmis = []
+        for i in range(len(graphe)):
+            fourmi = {}
+            for j in range(len(graphe)):
+                fourmi[j] = False
+            fourmi[len(graphe)] = i
+            fourmis.append(fourmi)
+        tInit = time.time()-tInitD
+
         tDeplacementsD = time.time()
         for etape in range(len(graphe)):
             if etape == len(graphe)/3 or etape == 2*len(graphe)/3:
@@ -290,9 +295,7 @@ def DMST(graphe, degre):
                 tmp = pheromones[(arete[0], arete[1])]
                 if tmp - 1 <= 0:
                     pheromones[(arete[0], arete[1])] -= 1
-        fourmis = []
-        for i in range(len(graphe)):
-            fourmis.append([i])
+                    pheromones[(arete[1], arete[0])]
         tmajPheromones += time.time()-tmajPheromonesD
     print("temps total Déplacements: "+str(temps[0]))
     rapport = (temps[1]/temps[0])*100
@@ -345,7 +348,7 @@ def deplacer(fourmi, graphe, pheromones, temps):
     desirTot = 0
     aretesPhero = []
     for a in aretes: 
-        if(a[0] not in fourmi):
+        if(fourmi[a[0]]==False):
             aretesPhero.append(a)
             desirabilite[a[0]] = (pheromones[(a[0], sommet)]/(a[1]))
             desirTot += desirabilite[a[0]]
@@ -358,7 +361,8 @@ def deplacer(fourmi, graphe, pheromones, temps):
         r -= desirabilite[a[0]]
         if r < 0:
             areteChoisie = (sommet, a[0])
-            fourmi.append(a[0])
+            fourmi[a[0]] = True
+            fourmi[len(graphe)] = a[0] 
             break
     
     temps[3]+=time.time()-tSelect
