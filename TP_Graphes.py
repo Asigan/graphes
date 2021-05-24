@@ -9,38 +9,32 @@ import copy
 
 def ajoutSommet(graphe, s):
     graphe.append([])
-    for i in range(len(graphe)):
-        graphe[i].append(float("inf"))
-        if s!= i:
-            graphe[s].append(float("inf"))
+        
 
 
 def ajoutArete(graphe, s1, s2, poids):
-    graphe[s1][s2] = poids
-    graphe[s2][s1] = poids
+    graphe[s1].append((s2, poids))
+    graphe[s2].append((s1, poids))
 
 def extraireAretes(graphe):
     res = []
     for i in range(len(graphe)):
-        for j in range(i,len(graphe)):
-            poids = graphe[i][j]
-            if poids != float("inf"):
-                res.append([i,j,poids])
+        for j in range(len(graphe[i])):
+            if(graphe[i][j][0]>i):
+                res.append([i, graphe[i][j][0], graphe[i][j][1]])
     return res
 
 def extraireAretesSommet(graphe, s):
-    res = []
-    for i in range(len(graphe[s])):
-        poids = graphe[s][i]
-        if poids != float("inf"):
-            if(s>i):
-                res.append([i,s,poids])
-            else:
-                res.append([s,i,poids])
-    return res
+    return graphe[s]
 
 def poidsArete(graphe, a, b):
-    return graphe[a][b]
+    aretes = extraireAretesSommet(graphe, a)
+    poids = -1
+    for sommet in aretes:
+        if sommet[0]==b:
+            poids = sommet[1] 
+            break
+    return poids
 
 def poidsGraphe(graphe):
     poids = 0
@@ -156,7 +150,7 @@ def connexe(graphe):
         if not visite[i]:
             return False
     return True
-    
+
 # Prim
 
 def majFile(file, prio, index):
@@ -254,6 +248,7 @@ def DMST(graphe, degre):
     aretesPheromone = []
     for i in range(len(aretes)):
         pheromones[(aretes[i][0], aretes[i][1])] = 1
+        pheromones[(aretes[i][1], aretes[i][0])] = 1
     tInit = time.time()-tTotalD
     tDeplacements = 0
     tArbre = 0
@@ -335,6 +330,7 @@ def DMST(graphe, degre):
 def majPheromones(pheromones, aretes):
     for a in aretes:
         pheromones[(a[0], a[1])] += 1
+        pheromones[(a[1], a[0])] = pheromones[(a[0], a[1])]
 
 
 
@@ -347,15 +343,12 @@ def deplacer(fourmi, graphe, pheromones, temps):
     temps[1]+= time.time() - tTotal
     tattrib = time.time()
     desirTot = 0
-    autreBout = -1
     aretesPhero = []
     for a in aretes: 
-        autreBout = a[1] if(sommet==a[0]) else a[0]
-        if(autreBout not in fourmi):
-            arete = (a[0], a[1])
-            aretesPhero.append([arete, a[2], autreBout])
-            desirabilite[arete] = (pheromones[arete]/(a[2]))
-            desirTot += desirabilite[arete]
+        if(a[0] not in fourmi):
+            aretesPhero.append(a)
+            desirabilite[a[0]] = (pheromones[(a[0], sommet)]/(a[1]))
+            desirTot += desirabilite[a[0]]
     temps[2]+=time.time()-tattrib
     
     # Trouver une arete aléatoire de façon pondérée
@@ -364,8 +357,8 @@ def deplacer(fourmi, graphe, pheromones, temps):
     for a in aretesPhero:
         r -= desirabilite[a[0]]
         if r < 0:
-            areteChoisie = a[0]
-            fourmi.append(a[2])
+            areteChoisie = (sommet, a[0])
+            fourmi.append(a[0])
             break
     
     temps[3]+=time.time()-tSelect
@@ -433,4 +426,5 @@ def comparePoids(graphe, d):
 ## Main
 
 graphe = lireFichier("crd300.gsb")
+
 print(DMST(graphe,5))
