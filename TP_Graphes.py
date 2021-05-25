@@ -8,33 +8,25 @@ import copy
 # Structure de graphe
 
 def ajoutSommet(graphe, s):
-    graphe.append([])
-        
-
+    graphe[s] = {}
 
 def ajoutArete(graphe, s1, s2, poids):
-    graphe[s1].append((s2, poids))
-    graphe[s2].append((s1, poids))
+    graphe[s1][s2] = poids
+    graphe[s2][s1] = poids
 
 def extraireAretes(graphe):
     res = []
     for i in range(len(graphe)):
-        for j in range(len(graphe[i])):
-            if(graphe[i][j][0]>i):
-                res.append([i, graphe[i][j][0], graphe[i][j][1]])
+        for key in graphe.keys():
+            if(key>i):
+                res.append([i, key, graphe[i][key]])
     return res
 
 def extraireAretesSommet(graphe, s):
     return graphe[s]
 
 def poidsArete(graphe, a, b):
-    aretes = extraireAretesSommet(graphe, a)
-    poids = -1
-    for sommet in aretes:
-        if sommet[0]==b:
-            poids = sommet[1] 
-            break
-    return poids
+    return graphe[a][b]
 
 def poidsGraphe(graphe):
     poids = 0
@@ -124,29 +116,28 @@ def kruskal2(graphe):
         a = arete[0]
         b = arete[1]
         tmp0 = res[a][b]
-        tmp1 = res[b][a]
-        res[a][b] = float('inf')
-        res[b][a] = float('inf')
+        del res[a][b]
+        del res[b][a]
         if not connexe(res):
             aretes.insert(i, arete)
             res[a][b] = tmp0
-            res[b][a] = tmp1
+            res[b][a] = tmp0
             i += 1
+        
     return aretes
 
 def parcours(graphe, sommet, visite):
     visite[sommet] = True
     s = 0
-    for i in range(len(graphe[sommet])):
-        if graphe[sommet][i] != float('inf'):
-            if not visite[s]:
-                parcours(graphe, s, visite)
-        s += 1
+    for key in graphe[sommet].keys():
+        
+        if not visite[key]:
+            parcours(graphe, key, visite)
 
 def connexe(graphe):
     visite = [False]*len(graphe)
     parcours(graphe, 0, visite)
-    for i in range(1, len(graphe)):
+    for i in range(1, len(graphe.keys())):
         if not visite[i]:
             return False
     return True
@@ -174,10 +165,10 @@ def prim(graphe, s):
 
     while file != []:
         prochain = file.pop(0)
-        aretesProchain = extraireAretesSommet(graphe, prochain)
-        for arete in aretesProchain:
-            suivant = arete[1]
-            poids = arete[2]
+        aretes = extraireAretesSommet(graphe, prochain)
+        for sommet in aretes.keys():
+            suivant = sommet
+            poids = aretes[sommet]
             for i in range(len(file)):
                 if suivant == file[i]:
                     if prio[suivant] >= poids:
@@ -198,7 +189,7 @@ def poidsPrim(graphe, prim):
 # Lecture de fichier
 
 def lireFichier(nomFichier):
-    graphe = []
+    graphe = {}
     with open(nomFichier, 'r') as f:
         lignes = f.readlines()
     statut = 0
@@ -249,28 +240,27 @@ def DMST(graphe, degre):
     tArbre = 0
     tmajPheromones = 0
     tDeplacementsPurs = 0
-    temps = [0]*4
     #boucle principale
     for i in range(100):
         tInitD = time.time()
         fourmis = []
-        for i in range(len(graphe)):
+        for i in range(len(graphe.keys())):
             fourmi = {}
-            for j in range(len(graphe)):
+            for j in range(len(graphe.keys())):
                 fourmi[j] = False
             fourmi[len(graphe)] = i
             fourmis.append(fourmi)
         tInit = time.time()-tInitD
 
         tDeplacementsD = time.time()
-        for etape in range(len(graphe)):
+        for etape in range(len(graphe.keys())):
             if etape == len(graphe)/3 or etape == 2*len(graphe)/3:
                 majPheromones(pheromones, aretesPheromone)
                 aretesPheromone = []
             
             for f in fourmis:
                 tDeplacementsPursD = time.time()
-                deplacement = deplacer(f, graphe, pheromones, temps)
+                deplacement = deplacer(f, graphe, pheromones)
                 tDeplacementsPurs += time.time()-tDeplacementsPursD
                 if deplacement != None:
                     aretesPheromone.append(deplacement)
@@ -297,16 +287,6 @@ def DMST(graphe, degre):
                     pheromones[(arete[0], arete[1])] -= 1
                     pheromones[(arete[1], arete[0])]
         tmajPheromones += time.time()-tmajPheromonesD
-    print("temps total Déplacements: "+str(temps[0]))
-    rapport = (temps[1]/temps[0])*100
-    print("\nInit Déplacements= " +str(temps[1]))
-    print(" /Rapport temps total :"+str(rapport))
-    rapport = (temps[2]/temps[0])*100
-    print("\nAttribution probas aux arêtes = " +str(temps[2]))
-    print(" /Rapport temps total :"+str(rapport))
-    rapport = (temps[3]/temps[0])*100
-    print("\nSelection arêtes = " +str(temps[3]))
-    print(" /Rapport temps total :"+str(rapport))
     tTotal = time.time()-tTotalD
     print("temps total : "+str(tTotal))
     rapport = (tInit/tTotal)*100
@@ -324,8 +304,6 @@ def DMST(graphe, degre):
     rapport = (tmajPheromones/tTotal)*100
     print("\nMaj des pheromones = " +str(tmajPheromones))
     print(" /Rapport temps total :"+str(rapport))
-    
-    
     return res, cout
 
 
@@ -337,37 +315,30 @@ def majPheromones(pheromones, aretes):
 
 
 
-def deplacer(fourmi, graphe, pheromones, temps):
-    tTotal = time.time()
+def deplacer(fourmi, graphe, pheromones):
     sommet = fourmi[len(fourmi)-1]
     aretes = extraireAretesSommet(graphe, sommet)
     areteChoisie = None
     desirabilite = {}
-    temps[1]+= time.time() - tTotal
-    tattrib = time.time()
     desirTot = 0
     aretesPhero = []
-    for a in aretes: 
-        if(fourmi[a[0]]==False):
-            aretesPhero.append(a)
-            desirabilite[a[0]] = (pheromones[(a[0], sommet)]/(a[1]))
-            desirTot += desirabilite[a[0]]
-    temps[2]+=time.time()-tattrib
+    for key in aretes.keys(): 
+        if(fourmi[key]==False):
+            aretesPhero.append(key)
+            desirabilite[key] = (pheromones[(key, sommet)]/(aretes[key]))
+            desirTot += desirabilite[key]
+
     
     # Trouver une arete aléatoire de façon pondérée
-    tSelect = time.time()
     r = random.random()*desirTot
     for a in aretesPhero:
-        r -= desirabilite[a[0]]
+        r -= desirabilite[a]
         if r < 0:
-            areteChoisie = (sommet, a[0])
-            fourmi[a[0]] = True
-            fourmi[len(graphe)] = a[0] 
+            areteChoisie = (sommet, a)
+            fourmi[a] = True
+            fourmi[len(graphe)] = a 
             break
     
-    temps[3]+=time.time()-tSelect
-    
-    temps[0]+=time.time()-tTotal
     return areteChoisie
 
 
@@ -430,5 +401,5 @@ def comparePoids(graphe, d):
 ## Main
 
 graphe = lireFichier("crd300.gsb")
-
+#print(prim(graphe, 0), poidsPrim(graphe, prim(graphe, 0)))
 print(DMST(graphe,5))
