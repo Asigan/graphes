@@ -264,7 +264,7 @@ def poidsPrim(graphe, prim):
 
 def lireFichier(nomFichier):
     graphe = {}
-    with open("grapheTests/"+nomFichier, 'r') as f:
+    with open("graphesTests/"+nomFichier, 'r') as f:
         lignes = f.readlines()
     statut = 0
     for ligne in lignes:
@@ -286,23 +286,26 @@ def compareAlgo(fichiers):
         tempsAlgos(graphe)
 
 def tempsAlgos(graphe):
-    tkrusk1 = time.time()
-    krusk = kruskal(graphe)
-    tkrusk2 = time.time()
-    tprim1 = time.time()
-    prim1 = prim(graphe, 0)
-    tprim2 = time.time()
-    tkrusk21 = time.time()
-    krusk2 = kruskal2(graphe)
-    tkrusk22 = time.time()
+    tkrusk = 0
+    tkrusk2 = 0
+    tprim = 0
+    
+    for i in range(10):
+        tkrusk-= time.time()
+        krusk = kruskal(graphe)
+        tkrusk+= time.time()
+        tprim-= time.time()
+        prim1 = prim(graphe, 0)
+        tprim+= time.time()
+        tkrusk2 -= time.time()
+        krusk2 = kruskal2(graphe)
+        tkrusk2 += time.time()
 
-    tkrusk = tkrusk2 - tkrusk1
-    tprim = tprim2 - tprim1
-    tkrusk22-= tkrusk21 
+    
 
-    print("Temps de Kruskal : " + str(tkrusk)+" secondes")
-    print("Temps de Kruskal2: " + str(tkrusk22)+" secondes")
-    print("Temps de Prim : " + str(tprim)+" secondes")
+    print("Temps de Kruskal(x10): " + str(tkrusk)+" secondes")
+    print("Temps de Kruskal2(x10): " + str(tkrusk2)+" secondes")
+    print("Temps de Prim(x10) : " + str(tprim)+" secondes")
     
     ratio = "infini"
     if tprim!=0:
@@ -310,7 +313,7 @@ def tempsAlgos(graphe):
     print("Ratio du temps de Kruskal par rapport à Prim : " + ratio)
     ratio = "infini"
     if tkrusk!=0:
-        ratio = str(tkrusk22/tkrusk)
+        ratio = str(tkrusk2/tkrusk)
     print("Ratio du temps de Kruskal 2 par rapport à Kruskal : " + ratio)
 
 ## Q6
@@ -503,11 +506,11 @@ def testDMST(fichiers):
     
 ## Main
 fichiers = ["crd300.gsb", "crd500.gsb", "crd700.gsb", "crd1000.gsb", "shrd150.gsb", "shrd200.gsb", "shrd300.gsb", "str500.gsb", "str700.gsb", "str1000.gsb", "sym300.gsb", "sym500.gsb","sym700.gsb"]
-tempsTotal = 0- time.time()
-testDMST(fichiers)
-tempsTotal+=time.time()
-print(tempsTotal)
-#compareAlgo(fichiers)
+#tempsTotal = 0- time.time()
+#testDMST(fichiers)
+#tempsTotal+=time.time()
+#print(tempsTotal)
+compareAlgo(fichiers)
 #graphe = lireFichier("crd1000.gsb")
 #DMST(graphe, 5)
 #print(prim(graphe, 0), poidsPrim(graphe, prim(graphe, 0)))
