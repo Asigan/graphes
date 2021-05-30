@@ -543,10 +543,13 @@ def testDMST(fichiers):
                     res = DMST(graphe, i)
                     temps += time.time()
                     res = grapheFromKruskal(graphe, res)
-                    if(poidsGraphe(res)<poids):
-                        poids = poidsGraphe(res)       
+                    poidsg = poidsGraphe(res)
+                    print(poidsg)
+                    if(poidsg<poids):
+                        poids = poidsg
+                        print(poids)       
                 temps/=5
-                f.write(str(i)+" "+ str(poidsGraphe(res))+" "+ str(temps)+'\n')
+                f.write(str(i)+" "+ str(poids)+" "+ str(temps)+'\n')
                 f.flush()
 
     
