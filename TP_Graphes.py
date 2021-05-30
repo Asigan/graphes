@@ -5,6 +5,7 @@ import random
 import copy
 import math
 
+compteur = 0
 ## Q1
 # Structure de graphe
 
@@ -194,7 +195,6 @@ def connexe(graphe):
     return True
 
 def grapheFromKruskal2(krusk, nbSommets):
-
     res = {}
     for i in range(nbSommets):
         res[i] = {}
@@ -217,8 +217,9 @@ def majFile(file, prio, index):
     return file
 
 
-def prim(graphe, s):
+def prim(graphe, s): 
     file, prio, pred = [s],[],[]
+
     for i in range(len(graphe)):
         prio.append(float("inf"))
         pred.append(None)
@@ -264,7 +265,7 @@ def poidsPrim(graphe, prim):
 
 def lireFichier(nomFichier):
     graphe = {}
-    with open("grapheTests/"+nomFichier, 'r') as f:
+    with open("graphesTests/"+nomFichier, 'r') as f:
         lignes = f.readlines()
     statut = 0
     for ligne in lignes:
@@ -285,24 +286,60 @@ def compareAlgo(fichiers):
         print(fichier)
         tempsAlgos(graphe)
 
+def testsPrim(fichiers):
+    for fichier in fichiers:
+        graphe = lireFichier(fichier)
+        print(fichier)
+        temps = 0
+        for i in range(100):
+            temps -= time.time()
+            prim(graphe, 0)
+            temps+=time.time()
+        print(temps/100)
+
+def testsKruskal(fichiers):
+     for fichier in fichiers:
+        graphe = lireFichier(fichier)
+        print(fichier)
+        temps = 0
+        for i in range(100):
+            temps -= time.time()
+            kruskal(graphe)
+            temps+=time.time()
+        print(temps/100)
+
+def testsKruskal2(fichiers):
+     for fichier in fichiers:
+        graphe = lireFichier(fichier)
+        print(fichier)
+        temps = 0
+        for i in range(100):
+            temps -= time.time()
+            kruskal2(graphe)
+            temps+=time.time()
+        print(temps/100)
+
 def tempsAlgos(graphe):
-    tkrusk1 = time.time()
-    krusk = kruskal(graphe)
-    tkrusk2 = time.time()
-    tprim1 = time.time()
-    prim1 = prim(graphe, 0)
-    tprim2 = time.time()
-    tkrusk21 = time.time()
-    krusk2 = kruskal2(graphe)
-    tkrusk22 = time.time()
+    tkrusk = 0
+    tkrusk2 = 0
+    tprim = 0
+    
+    for i in range(10):
+        tkrusk-= time.time()
+        krusk = kruskal(graphe)
+        tkrusk+= time.time()
+        tprim-= time.time()
+        prim1 = prim(graphe, 0)
+        tprim+= time.time()
+        tkrusk2 -= time.time()
+        krusk2 = kruskal2(graphe)
+        tkrusk2 += time.time()
 
-    tkrusk = tkrusk2 - tkrusk1
-    tprim = tprim2 - tprim1
-    tkrusk22-= tkrusk21 
+    
 
-    print("Temps de Kruskal : " + str(tkrusk)+" secondes")
-    print("Temps de Kruskal2: " + str(tkrusk22)+" secondes")
-    print("Temps de Prim : " + str(tprim)+" secondes")
+    print("Temps de Kruskal(x10): " + str(tkrusk)+" secondes")
+    print("Temps de Kruskal2(x10): " + str(tkrusk2)+" secondes")
+    print("Temps de Prim(x10) : " + str(tprim)+" secondes")
     
     ratio = "infini"
     if tprim!=0:
@@ -310,34 +347,42 @@ def tempsAlgos(graphe):
     print("Ratio du temps de Kruskal par rapport à Prim : " + ratio)
     ratio = "infini"
     if tkrusk!=0:
-        ratio = str(tkrusk22/tkrusk)
+        ratio = str(tkrusk2/tkrusk)
     print("Ratio du temps de Kruskal 2 par rapport à Kruskal : " + ratio)
 
 ## Q6
 def DMST(graphe, degre):
-    tTotalD =  time.time()
+    #tTotalD =  time.time()
     #init de res
     res = []
     cout = float("inf")
     cmpt = 0
-
+    
     #init des pheromones
     pheromones = {}
     aretes = extraireAretes(graphe)
+    poidsMax = 0
+    poidsMin = float('inf')
+    for i in range(len(aretes)):
+        if aretes[i][2]>poidsMax:
+            poidsMax = aretes[i][2]
+        if aretes[i][2]<poidsMin:
+            poidsMin = aretes[i][2]
     aretesPheromone = []
     for i in range(len(aretes)):
-        pheromones[(aretes[i][0], aretes[i][1])] = 1
-        pheromones[(aretes[i][1], aretes[i][0])] = 1
-    tInit = time.time()-tTotalD
+        phero = (poidsMax-aretes[i][2])+(poidsMax-poidsMin)
+        pheromones[(aretes[i][0], aretes[i][1])] = phero
+        pheromones[(aretes[i][1], aretes[i][0])] = phero
+    """tInit = time.time()-tTotalD
     tDeplacements = 0
     tArbre = 0
     tmajPheromones = 0
     tDeplacementsPurs = 0
     tArbrePur = 0
-    tCalculCoutArbre = 0
+    tCalculCoutArbre = 0"""
     #boucle principale
     for i in range(100):
-        tInitD = time.time()
+        #tInitD = time.time()
         fourmis = []
         for i in range(len(graphe.keys())):
             fourmi = {}
@@ -345,9 +390,9 @@ def DMST(graphe, degre):
                 fourmi[j] = False
             fourmi[len(graphe)] = i
             fourmis.append(fourmi)
-        tInit = time.time()-tInitD
+        #tInit = time.time()-tInitD
 
-        tDeplacementsD = time.time()
+        #tDeplacementsD = time.time()
         obj = len(graphe.keys())//2
         for etape in range(obj):
             if etape == obj//3 or etape == 2*obj//3:
@@ -355,22 +400,18 @@ def DMST(graphe, degre):
                 aretesPheromone = []
             
             for f in fourmis:
-                tDeplacementsPursD = time.time()
                 deplacement = deplacer(f, graphe, pheromones)
-                tDeplacementsPurs += time.time()-tDeplacementsPursD
                 if deplacement != None:
                     aretesPheromone.append(deplacement)
             
         majPheromones(pheromones, aretesPheromone)
-        tDeplacements+=time.time() - tDeplacementsD
+        #tDeplacements+=time.time() - tDeplacementsD
         
         
         tArbreD = time.time()
         T = construireArbre(graphe, aretes, pheromones, degre)
-        tArbrePur += time.time()-tArbreD
-        tcalculcoutD = time.time()
         coutT = poidsKruskal(graphe, T)
-        tCalculCoutArbre += time.time()-tcalculcoutD
+        #tCalculCoutArbre += time.time()-tcalculcoutD
         if coutT < cout:
             graphetmp = grapheFromKruskal(graphe, T)
             if(connexe(graphetmp)):
@@ -380,8 +421,8 @@ def DMST(graphe, degre):
             
         else:
             cmpt += 1
-        tArbre+=time.time()-tArbreD
-        tmajPheromonesD = time.time()
+        #tArbre+=time.time()-tArbreD
+        #tmajPheromonesD = time.time()
         majPheromones(pheromones, res)
         
         if cmpt >= 10:
@@ -390,9 +431,9 @@ def DMST(graphe, degre):
                 if tmp - 1 <= 0:
                     pheromones[(arete[0], arete[1])] -= 1
                     pheromones[(arete[1], arete[0])]
-        tmajPheromones += time.time()-tmajPheromonesD
-    tTotal = time.time()-tTotalD
-    """print("\n\ntemps total : "+str(tTotal))
+        #tmajPheromones += time.time()-tmajPheromonesD
+    """tTotal = time.time()-tTotalD
+    print("\n\ntemps total : "+str(tTotal))
     rapport = (tInit/tTotal)*100
     print("\nInit = " +str(tInit))
     print(" /Rapport temps total :"+str(rapport))
@@ -490,25 +531,56 @@ def testDMST(fichiers):
     
     for fichier in fichiers:
         graphe = lireFichier(fichier)
-        with open("testsDMST100/"+fichier+"testsDMST.txt", 'w') as f:
+        with open("testsDMSTComplets/"+fichier+"testsDMST.txt", 'w') as f:
             print(fichier)
             f.write(fichier+'\n')
-            f.write(str(poidsKruskal(graphe, kruskal(graphe)))+'\n')
-            for i in range(1, 10):
-                res = DMST(graphe, i)
-                res = grapheFromKruskal(graphe, res)
-                
-                f.write(str(i)+" "+ str(poidsGraphe(res))+'\n')
-
+            poidsMin= poidsPrim(graphe, prim(graphe, 0))
+            f.write(str(poidsMin)+'\n')
+            i = 2
+            poids = float('inf')
+            while(poids>poidsMin and i<30):
+                temps = 0
+                poidsMoyen = 0
+                nbIter = 0
+                for j in range(5):
+                    nbIter +=1
+                    temps-= time.time()
+                    res = DMST(graphe, i)
+                    temps += time.time()
+                    res = grapheFromKruskal(graphe, res)
+                    poidsg = poidsGraphe(res)
+                    poidsMoyen+=poidsg
+                    print(poidsg)
+                    print(i, calculDegreMax(res), connexe(res))
+                    if(poidsg<poids):
+                        poids = poidsg
+                        print(poids)       
+                temps/=nbIter
+                poidsMoyen=poidsMoyen/nbIter              
+                f.write(str(i)+" "+ str(poids)+" "+str(poidsMoyen)+" "+ str(temps)+'\n')
+                f.flush()
+                i+=1
+def calculDegreMax(graphe):
+    degre = 0
+    for sommet in graphe:
+        if(len(graphe[sommet])>degre):
+            degre = len(graphe[sommet])
+    return degre
     
 ## Main
 fichiers = ["crd300.gsb", "crd500.gsb", "crd700.gsb", "crd1000.gsb", "shrd150.gsb", "shrd200.gsb", "shrd300.gsb", "str500.gsb", "str700.gsb", "str1000.gsb", "sym300.gsb", "sym500.gsb","sym700.gsb"]
-tempsTotal = 0- time.time()
+#fichiers = ["crd300.gsb", "crd500.gsb", "shrd150.gsb", "shrd200.gsb", "shrd300.gsb", "str500.gsb", "sym300.gsb", "sym500.gsb"]
 testDMST(fichiers)
-tempsTotal+=time.time()
-print(tempsTotal)
+#tempsTotal = 0- time.time()
+#testDMST(fichiers)
+#tempsTotal+=time.time()
+#print(tempsTotal)
 #compareAlgo(fichiers)
-#graphe = lireFichier("crd1000.gsb")
+fichiers = ["crd300.gsb", "crd500.gsb", "crd700.gsb", "crd1000.gsb"]
+#testsPrim(fichiers)
+#testsKruskal(fichiers)
+#testsKruskal2(fichiers)
+graphe = lireFichier("crd300.gsb")
 #DMST(graphe, 5)
 #print(prim(graphe, 0), poidsPrim(graphe, prim(graphe, 0)))
 #print(grapheFromPrim(graphe,prim(graphe, 0)))
@@ -518,4 +590,4 @@ print(tempsTotal)
 #print(grapheFromKruskal2(kruskal2(graphe), len(graphe)))
 #grapheDMST = grapheFromKruskal(graphe, DMST(graphe,5)) 
 #print(grapheDMST, poidsGraphe(grapheDMST))
-#print(grapheFromKruskal(graphe, kruskal(graphe)))
+# print(grapheFromKruskal(graphe, kruskal(graphe)))
