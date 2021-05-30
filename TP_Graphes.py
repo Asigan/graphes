@@ -531,32 +531,45 @@ def testDMST(fichiers):
     
     for fichier in fichiers:
         graphe = lireFichier(fichier)
-        with open("testsDMST/"+fichier+"testsDMST.txt", 'w') as f:
+        with open("testsDMSTComplets/"+fichier+"testsDMST.txt", 'w') as f:
             print(fichier)
             f.write(fichier+'\n')
-            f.write(str(poidsPrim(graphe, prim(graphe, 0)))+'\n')
-            for i in range(2, 10):
-                poids = float('inf')
+            poidsMin= poidsPrim(graphe, prim(graphe, 0))
+            f.write(str(poidsMin)+'\n')
+            i = 2
+            poids = float('inf')
+            while(poids>poidsMin and i<30):
                 temps = 0
+                poidsMoyen = 0
+                nbIter = 0
                 for j in range(5):
+                    nbIter +=1
                     temps-= time.time()
                     res = DMST(graphe, i)
                     temps += time.time()
                     res = grapheFromKruskal(graphe, res)
                     poidsg = poidsGraphe(res)
+                    poidsMoyen+=poidsg
                     print(poidsg)
+                    print(i, calculDegreMax(res), connexe(res))
                     if(poidsg<poids):
                         poids = poidsg
                         print(poids)       
-                temps/=5
-                f.write(str(i)+" "+ str(poids)+" "+ str(temps)+'\n')
+                temps/=nbIter
+                poidsMoyen=poidsMoyen/nbIter              
+                f.write(str(i)+" "+ str(poids)+" "+str(poidsMoyen)+" "+ str(temps)+'\n')
                 f.flush()
-
+                i+=1
+def calculDegreMax(graphe):
+    degre = 0
+    for sommet in graphe:
+        if(len(graphe[sommet])>degre):
+            degre = len(graphe[sommet])
+    return degre
     
 ## Main
 fichiers = ["crd300.gsb", "crd500.gsb", "crd700.gsb", "crd1000.gsb", "shrd150.gsb", "shrd200.gsb", "shrd300.gsb", "str500.gsb", "str700.gsb", "str1000.gsb", "sym300.gsb", "sym500.gsb","sym700.gsb"]
-fichiers = ["crd300.gsb", "crd500.gsb", "shrd150.gsb", "shrd200.gsb", "shrd300.gsb", "str500.gsb", "sym300.gsb", "sym500.gsb"]
-fichiers=["crd300.gsb"]
+#fichiers = ["crd300.gsb", "crd500.gsb", "shrd150.gsb", "shrd200.gsb", "shrd300.gsb", "str500.gsb", "sym300.gsb", "sym500.gsb"]
 testDMST(fichiers)
 #tempsTotal = 0- time.time()
 #testDMST(fichiers)
